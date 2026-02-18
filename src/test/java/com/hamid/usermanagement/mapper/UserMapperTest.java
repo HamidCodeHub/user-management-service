@@ -26,7 +26,7 @@ class UserMapperTest {
     @Test
     @DisplayName("Should map CreateUserRequest to User entity")
     void toEntity_ShouldMapCorrectly() {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("test.user");
         request.setEmail("test@example.com");
@@ -35,10 +35,8 @@ class UserMapperTest {
         request.setLastName("User");
         request.setRoles(Set.of(Role.DEVELOPER, Role.OPERATOR));
 
-        // When
         User user = userMapper.toEntity(request);
 
-        // Then
         assertThat(user).isNotNull();
         assertThat(user.getUsername()).isEqualTo("test.user");
         assertThat(user.getEmail()).isEqualTo("test@example.com");
@@ -51,7 +49,7 @@ class UserMapperTest {
     @Test
     @DisplayName("Should map User entity to UserResponse")
     void toResponse_ShouldMapCorrectly() {
-        // Given
+
         User user = User.builder()
                 .id(1L)
                 .username("test.user")
@@ -62,10 +60,8 @@ class UserMapperTest {
                 .roles(Set.of(Role.DEVELOPER))
                 .build();
 
-        // When
         UserResponse response = userMapper.toResponse(user);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getUsername()).isEqualTo("test.user");

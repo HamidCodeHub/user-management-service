@@ -41,12 +41,12 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle UserNotFoundException with 404 status")
     void handleUserNotFoundException_ShouldReturn404() throws Exception {
-        // Given
+
         Long nonExistentId = 999L;
         when(userService.getUserById(nonExistentId))
                 .thenThrow(new UserNotFoundException(nonExistentId));
 
-        // When & Then
+
         mockMvc.perform(get("/api/v1/users/" + nonExistentId))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -58,7 +58,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle EmailAlreadyExistsException with 409 status")
     void handleEmailAlreadyExistsException_ShouldReturn409() throws Exception {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("test.user");
         request.setEmail("existing@example.com");
@@ -70,7 +70,7 @@ class GlobalExceptionHandlerTest {
         when(userService.createUser(any(CreateUserRequest.class)))
                 .thenThrow(new EmailAlreadyExistsException("existing@example.com"));
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -84,7 +84,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle IllegalArgumentException with 400 status")
     void handleIllegalArgumentException_ShouldReturn400() throws Exception {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("duplicate.user");
         request.setEmail("test@example.com");
@@ -96,7 +96,7 @@ class GlobalExceptionHandlerTest {
         when(userService.createUser(any(CreateUserRequest.class)))
                 .thenThrow(new IllegalArgumentException("Username already in use: duplicate.user"));
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -110,7 +110,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle validation errors with 400 status")
     void handleValidationException_ShouldReturn400() throws Exception {
-        // Given - CreateUserRequest con dati invalidi
+
         CreateUserRequest invalidRequest = new CreateUserRequest();
         invalidRequest.setUsername("");
         invalidRequest.setEmail("invalid-email");
@@ -118,7 +118,7 @@ class GlobalExceptionHandlerTest {
         invalidRequest.setFirstName("");
         invalidRequest.setLastName("");
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -137,7 +137,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle validation error - blank username only")
     void handleValidationError_BlankUsername_ShouldReturn400() throws Exception {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("");
         request.setEmail("valid@example.com");
@@ -146,7 +146,7 @@ class GlobalExceptionHandlerTest {
         request.setLastName("User");
         request.setRoles(Set.of(Role.DEVELOPER));
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -159,7 +159,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle validation error - invalid email format")
     void handleValidationError_InvalidEmail_ShouldReturn400() throws Exception {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("test.user");
         request.setEmail("not-an-email");
@@ -168,7 +168,7 @@ class GlobalExceptionHandlerTest {
         request.setLastName("User");
         request.setRoles(Set.of(Role.DEVELOPER));
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -181,7 +181,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle validation error - empty roles")
     void handleValidationError_EmptyRoles_ShouldReturn400() throws Exception {
-        // Given
+
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("test.user");
         request.setEmail("test@example.com");
@@ -190,7 +190,6 @@ class GlobalExceptionHandlerTest {
         request.setLastName("User");
         request.setRoles(Set.of());
 
-        // When & Then
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -203,7 +202,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle update validation errors")
     void handleUpdateValidationErrors_ShouldReturn400() throws Exception {
-        // Given
+
         String invalidUpdateJson = """
                 {
                     "username": "",
@@ -213,7 +212,6 @@ class GlobalExceptionHandlerTest {
                 }
                 """;
 
-        // When & Then
         mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidUpdateJson))

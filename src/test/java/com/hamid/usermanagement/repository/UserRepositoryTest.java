@@ -42,10 +42,9 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should save user successfully")
     void save_ShouldPersistUser() {
-        // When
+
         User savedUser = userRepository.save(testUser);
 
-        // Then
         assertThat(savedUser.getId()).isNotNull();
         assertThat(savedUser.getUsername()).isEqualTo("test.user");
         assertThat(savedUser.getEmail()).isEqualTo("test@example.com");
@@ -54,13 +53,11 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should find user by id")
     void findById_ShouldReturnUser() {
-        // Given
+
         User savedUser = entityManager.persistAndFlush(testUser);
 
-        // When
         Optional<User> found = userRepository.findById(savedUser.getId());
 
-        // Then
         assertThat(found).isPresent();
         assertThat(found.get().getUsername()).isEqualTo("test.user");
     }
@@ -68,49 +65,41 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should check if email exists")
     void existsByEmail_ShouldReturnTrueWhenEmailExists() {
-        // Given
+
         entityManager.persistAndFlush(testUser);
 
-        // When
         boolean exists = userRepository.existsByEmail("test@example.com");
 
-        // Then
         assertThat(exists).isTrue();
     }
 
     @Test
     @DisplayName("Should check if email does not exist")
     void existsByEmail_ShouldReturnFalseWhenEmailDoesNotExist() {
-        // When
         boolean exists = userRepository.existsByEmail("nonexistent@example.com");
 
-        // Then
         assertThat(exists).isFalse();
     }
 
     @Test
     @DisplayName("Should check if username exists")
     void existsByUsername_ShouldReturnTrueWhenUsernameExists() {
-        // Given
+
         entityManager.persistAndFlush(testUser);
 
-        // When
         boolean exists = userRepository.existsByUsername("test.user");
 
-        // Then
         assertThat(exists).isTrue();
     }
 
     @Test
     @DisplayName("Should find user by username")
     void findByUsername_ShouldReturnUser() {
-        // Given
+
         entityManager.persistAndFlush(testUser);
 
-        // When
         Optional<User> found = userRepository.findByUsername("test.user");
 
-        // Then
         assertThat(found).isPresent();
         assertThat(found.get().getEmail()).isEqualTo("test@example.com");
     }
@@ -118,15 +107,13 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should delete user by id")
     void deleteById_ShouldRemoveUser() {
-        // Given
+
         User savedUser = entityManager.persistAndFlush(testUser);
         Long userId = savedUser.getId();
 
-        // When
         userRepository.deleteById(userId);
         entityManager.flush();
 
-        // Then
         Optional<User> deleted = userRepository.findById(userId);
         assertThat(deleted).isEmpty();
     }

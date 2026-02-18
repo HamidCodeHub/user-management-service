@@ -42,7 +42,7 @@ class UserIntegrationTest {
     @Test
     @DisplayName("Complete user lifecycle - Create, Read, Update, Delete")
     void completeUserLifecycle() throws Exception {
-        // 1. CREATE
+
         CreateUserRequest createRequest = new CreateUserRequest();
         createRequest.setUsername("integration.test");
         createRequest.setEmail("integration@example.com");
@@ -61,12 +61,10 @@ class UserIntegrationTest {
 
         Long userId = objectMapper.readTree(createResponse).get("id").asLong();
 
-        // 2. READ
         mockMvc.perform(get("/api/v1/users/" + userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username", is("integration.test")));
 
-        // 3. UPDATE
         String updateJson = """
                 {
                     "username": "updated.test",
@@ -84,11 +82,9 @@ class UserIntegrationTest {
                 .andExpect(jsonPath("$.username", is("updated.test")))
                 .andExpect(jsonPath("$.firstName", is("Updated")));
 
-        // 4. DELETE
         mockMvc.perform(delete("/api/v1/users/" + userId))
                 .andExpect(status().isNoContent());
 
-        // 5. VERIFY DELETED
         mockMvc.perform(get("/api/v1/users/" + userId))
                 .andExpect(status().isNotFound());
     }

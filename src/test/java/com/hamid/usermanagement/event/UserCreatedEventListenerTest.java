@@ -45,19 +45,14 @@ class UserCreatedEventListenerTest {
     @Test
     @DisplayName("Should handle UserCreatedEvent asynchronously")
     void handleUserCreatedEvent_ShouldProcessAsynchronously(CapturedOutput output) {
-        // Given
         UserCreatedEvent event = new UserCreatedEvent(this, testUser);
 
-        // When
         long startTime = System.currentTimeMillis();
         eventPublisher.publishEvent(event);
         long publishTime = System.currentTimeMillis() - startTime;
 
-        // Then
-        // Event publishing should be fast (< 100ms)
         assertThat(publishTime).isLessThan(100);
 
-        // Wait for async processing to complete (max 3 seconds)
         await()
                 .atMost(3, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
@@ -72,13 +67,13 @@ class UserCreatedEventListenerTest {
     @Test
     @DisplayName("Should log user details in event")
     void handleUserCreatedEvent_ShouldLogUserDetails(CapturedOutput output) {
-        // Given
+
         UserCreatedEvent event = new UserCreatedEvent(this, testUser);
 
-        // When
+
         eventPublisher.publishEvent(event);
 
-        // Then
+
         await()
                 .atMost(3, TimeUnit.SECONDS)
                 .untilAsserted(() -> {

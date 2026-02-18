@@ -76,11 +76,11 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /api/v1/users - Should return all users")
     void getAllUsers_ShouldReturnUserList() throws Exception {
-        // Given
+
         List<UserResponse> users = Arrays.asList(userResponse);
         when(userService.getAllUsers()).thenReturn(users);
 
-        // When & Then
+
         mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -97,7 +97,7 @@ class UserControllerTest {
         // Given
         when(userService.getUserById(1L)).thenReturn(userResponse);
 
-        // When & Then
+
         mockMvc.perform(get("/api/v1/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
@@ -110,10 +110,10 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /api/v1/users - Should create user successfully")
     void createUser_ShouldReturnCreatedUser() throws Exception {
-        // Given
+
         when(userService.createUser(any(CreateUserRequest.class))).thenReturn(userResponse);
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
@@ -127,10 +127,10 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /api/v1/users - Should fail with invalid email")
     void createUser_WithInvalidEmail_ShouldReturnBadRequest() throws Exception {
-        // Given
+
         createRequest.setEmail("invalid-email");
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
@@ -142,10 +142,10 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /api/v1/users - Should fail with blank username")
     void createUser_WithBlankUsername_ShouldReturnBadRequest() throws Exception {
-        // Given
+
         createRequest.setUsername("");
 
-        // When & Then
+
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
@@ -157,7 +157,7 @@ class UserControllerTest {
     @Test
     @DisplayName("PUT /api/v1/users/{id} - Should update user successfully")
     void updateUser_ShouldReturnUpdatedUser() throws Exception {
-        // Given
+
         UserResponse updatedResponse = UserResponse.builder()
                 .id(1L)
                 .username("updated.user")
@@ -170,7 +170,7 @@ class UserControllerTest {
 
         when(userService.updateUser(eq(1L), any(UpdateUserRequest.class))).thenReturn(updatedResponse);
 
-        // When & Then
+
         mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -184,10 +184,10 @@ class UserControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/users/{id} - Should delete user successfully")
     void deleteUser_ShouldReturnNoContent() throws Exception {
-        // Given
+
         doNothing().when(userService).deleteUser(1L);
 
-        // When & Then
+
         mockMvc.perform(delete("/api/v1/users/1"))
                 .andExpect(status().isNoContent());
 
