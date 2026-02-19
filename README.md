@@ -923,3 +923,123 @@ java -jar target/user-management-service-0.0.1-SNAPSHOT.jar
 - JDBC URL: `jdbc:h2:mem:userdb`
 - Username: `sa`
 - Password: (empty)
+
+# Docker Deployment Section (Add this to README.md)
+
+Add this section after the "Running the Application" section in your main README.md:
+
+---
+
+## Running with Docker
+
+The application can be easily run using Docker, which eliminates the need to install Java and Maven on your machine.
+
+### Prerequisites for Docker
+
+You only need Docker installed:
+
+- **Docker Desktop** (Windows/Mac): https://www.docker.com/products/docker-desktop
+- **Docker Engine** (Linux): https://docs.docker.com/engine/install/
+
+Verify installation:
+```bash
+docker --version
+docker-compose --version
+```
+
+### Quick Start with Docker Compose
+
+This is the easiest way to run the application:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/HamidCodeHub/user-management-service.git
+cd user-management-service
+
+# 2. Start the application
+docker-compose up -d
+
+# 3. Access Swagger UI
+# Open browser: http://localhost:8080/swagger-ui/index.html
+```
+
+That's it! The application is now running in a Docker container.
+
+### Viewing Logs
+
+```bash
+# View application logs
+docker-compose logs -f user-management-service
+```
+
+### Stopping the Application
+
+```bash
+# Stop the container
+docker-compose down
+```
+
+### Building the Docker Image Manually
+
+If you prefer to build and run manually:
+
+```bash
+# Build the image
+docker build -t user-management-service:1.0.0 .
+
+# Run the container
+docker run -d -p 8080:8080 --name user-management-service user-management-service:1.0.0
+
+# View logs
+docker logs -f user-management-service
+
+# Stop and remove
+docker rm -f user-management-service
+```
+
+### Docker Image Details
+
+The Docker image includes:
+- ✅ Multi-stage build for optimized size (~250MB)
+- ✅ Alpine Linux base for security
+- ✅ Non-root user for better security
+- ✅ Built-in health checks
+- ✅ Optimized JVM settings for containers
+
+### Complete Docker Documentation
+
+For detailed Docker instructions including:
+- PostgreSQL integration
+- Production deployment tips
+- Troubleshooting guide
+- Docker commands reference
+
+See the complete guide: **[DOCKER.md](DOCKER.md)**
+
+---
+
+## Docker vs Traditional Deployment
+
+**Running with Docker:**
+```bash
+docker-compose up -d
+```
+✅ No Java installation needed
+✅ No Maven installation needed
+✅ Consistent environment
+✅ Easy to deploy anywhere
+✅ Simple to start/stop
+
+**Running Traditionally:**
+```bash
+mvnw spring-boot:run
+```
+✅ Faster startup (no container overhead)
+✅ Direct access to source code
+✅ Easier debugging in IDE
+✅ Better for active development
+
+**Recommendation:**
+- **Development**: Use Maven directly for faster iteration
+- **Testing/Demo**: Use Docker for consistent environment
+- **Production**: Use Docker for reliable deployment
