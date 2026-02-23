@@ -1,9 +1,11 @@
 package com.hamid.usermanagement.service;
 
+
 import com.hamid.usermanagement.dto.request.CreateUserRequest;
 import com.hamid.usermanagement.dto.request.UpdateUserRequest;
 import com.hamid.usermanagement.dto.response.UserResponse;
 import com.hamid.usermanagement.entity.User;
+import com.hamid.usermanagement.event.UserCreatedEvent;
 import com.hamid.usermanagement.exception.EmailAlreadyExistsException;
 import com.hamid.usermanagement.exception.UserNotFoundException;
 import com.hamid.usermanagement.mapper.UserMapper;
@@ -11,6 +13,7 @@ import com.hamid.usermanagement.repository.UserRepository;
 import com.hamid.usermanagement.security.AuthenticationFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +22,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j  // Lombok per logging
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final AuthenticationFacade authenticationFacade;  // ← NUOVO
+    private final AuthenticationFacade authenticationFacade;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -32,6 +37,7 @@ public class UserServiceImpl implements UserService {
         String currentUser = authenticationFacade.getCurrentUsername();
         log.info("User '{}' is retrieving all users", currentUser);
 
+        log.info("Retrieving all users");
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toResponse)
@@ -43,7 +49,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserById(Long id) {
         String currentUser = authenticationFacade.getCurrentUsername();
         log.info("User '{}' is retrieving user with id: {}", currentUser, id);
-
+        log.info("Retrieving user with id: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
         return userMapper.toResponse(user);
@@ -56,6 +62,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("User '{}' (email: {}) is creating new user with username: {}",
                 currentUser, currentEmail, request.getUsername());
+        log.info("Creating new user with username: {}", request.getUsername());
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException(request.getEmail());
@@ -68,6 +75,11 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         log.info("User '{}' successfully created user with id: {}", currentUser, savedUser.getId());
+
+        log.info("Publishing UserCreatedEvent for user: {}", savedUser.getUsername());
+        eventPublisher.publishEvent(new UserCreatedEvent(this, savedUser));
+
+        log.info("User created successfully with id: {}", savedUser.getId());
         return userMapper.toResponse(savedUser);
     }
 
@@ -75,6 +87,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         String currentUser = authenticationFacade.getCurrentUsername();
         log.info("User '{}' is updating user with id: {}", currentUser, id);
+        log.info("Updating user with id: {}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -90,6 +103,7 @@ public class UserServiceImpl implements UserService {
 
         User updatedUser = userRepository.save(user);
         log.info("User '{}' successfully updated user with id: {}", currentUser, id);
+        log.info("User updated successfully with id: {}", id);
 
         return userMapper.toResponse(updatedUser);
     }
@@ -98,6 +112,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         String currentUser = authenticationFacade.getCurrentUsername();
         log.info("User '{}' is deleting user with id: {}", currentUser, id);
+        log.info("Deleting user with id: {}", id);
 
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
@@ -105,5 +120,6 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
 
         log.info("User '{}' successfully deleted user with id: {}", currentUser, id);
+        log.info("User deleted successfully with id: {}", id);
     }
 }
