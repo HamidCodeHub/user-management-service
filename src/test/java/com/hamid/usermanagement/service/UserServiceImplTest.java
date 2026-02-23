@@ -11,6 +11,7 @@ import com.hamid.usermanagement.exception.EmailAlreadyExistsException;
 import com.hamid.usermanagement.exception.UserNotFoundException;
 import com.hamid.usermanagement.mapper.UserMapper;
 import com.hamid.usermanagement.repository.UserRepository;
+import com.hamid.usermanagement.security.AuthenticationFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ class UserServiceImplTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private AuthenticationFacade authenticationFacade;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -87,11 +91,14 @@ class UserServiceImplTest {
         updateRequest.setFirstName("Updated");
         updateRequest.setLastName("User");
         updateRequest.setRoles(Set.of(Role.OPERATOR));
+
+        when(authenticationFacade.getCurrentUsername()).thenReturn("test-user");
     }
 
     @Test
     @DisplayName("getAllUsers - Should return list of all users")
     void getAllUsers_ShouldReturnAllUsers() {
+
         List<User> users = Arrays.asList(user);
         when(userRepository.findAll()).thenReturn(users);
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
@@ -102,6 +109,7 @@ class UserServiceImplTest {
         assertThat(result.get(0).getUsername()).isEqualTo("test.user");
         verify(userRepository, times(1)).findAll();
         verify(userMapper, times(1)).toResponse(any(User.class));
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
@@ -116,11 +124,13 @@ class UserServiceImplTest {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getUsername()).isEqualTo("test.user");
         verify(userRepository, times(1)).findById(1L);
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
     @DisplayName("getUserById - Should throw exception when user not found")
     void getUserById_WhenUserNotFound_ShouldThrowException() {
+
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUserById(999L))
@@ -129,11 +139,13 @@ class UserServiceImplTest {
 
         verify(userRepository, times(1)).findById(999L);
         verify(userMapper, never()).toResponse(any());
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
     @DisplayName("createUser - Should create user and publish event")
     void createUser_ShouldCreateUserAndPublishEvent() {
+        when(authenticationFacade.getCurrentUserEmail()).thenReturn(Optional.of("test@example.com"));  // Mock specifico
         when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(false);
         when(userRepository.existsByUsername(createRequest.getUsername())).thenReturn(false);
         when(userMapper.toEntity(createRequest)).thenReturn(user);
@@ -152,24 +164,33 @@ class UserServiceImplTest {
         assertThat(publishedEvent.getUser()).isEqualTo(user);
 
         verify(userRepository, times(1)).save(user);
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
+        verify(authenticationFacade, times(1)).getCurrentUserEmail();  // ← VERIFY
     }
 
     @Test
     @DisplayName("createUser - Should throw exception when email already exists")
     void createUser_WhenEmailExists_ShouldThrowException() {
+        // Given
+        when(authenticationFacade.getCurrentUserEmail()).thenReturn(Optional.of("test@example.com"));  // Mock specifico
         when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(true);
 
+        // When & Then
         assertThatThrownBy(() -> userService.createUser(createRequest))
                 .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessageContaining("test@example.com");
 
         verify(userRepository, never()).save(any());
         verify(eventPublisher, never()).publishEvent(any());
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
+        verify(authenticationFacade, times(1)).getCurrentUserEmail();  // ← VERIFY
     }
 
     @Test
     @DisplayName("createUser - Should throw exception when username already exists")
     void createUser_WhenUsernameExists_ShouldThrowException() {
+
+        when(authenticationFacade.getCurrentUserEmail()).thenReturn(Optional.of("test@example.com"));  // Mock specifico
         when(userRepository.existsByEmail(createRequest.getEmail())).thenReturn(false);
         when(userRepository.existsByUsername(createRequest.getUsername())).thenReturn(true);
 
@@ -179,12 +200,13 @@ class UserServiceImplTest {
 
         verify(userRepository, never()).save(any());
         verify(eventPublisher, never()).publishEvent(any());
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
+        verify(authenticationFacade, times(1)).getCurrentUserEmail();  // ← VERIFY
     }
 
     @Test
     @DisplayName("updateUser - Should update user successfully")
     void updateUser_ShouldUpdateUser() {
-        // Given
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
@@ -194,18 +216,19 @@ class UserServiceImplTest {
         assertThat(result).isNotNull();
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(any(User.class));
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
     @DisplayName("updateUser - Should throw exception when user not found")
     void updateUser_WhenUserNotFound_ShouldThrowException() {
-
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateUser(999L, updateRequest))
                 .isInstanceOf(UserNotFoundException.class);
 
         verify(userRepository, never()).save(any());
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
@@ -218,6 +241,7 @@ class UserServiceImplTest {
 
         verify(userRepository, times(1)).existsById(1L);
         verify(userRepository, times(1)).deleteById(1L);
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 
     @Test
@@ -229,5 +253,6 @@ class UserServiceImplTest {
                 .isInstanceOf(UserNotFoundException.class);
 
         verify(userRepository, never()).deleteById(any());
+        verify(authenticationFacade, times(1)).getCurrentUsername();  // ← VERIFY
     }
 }
