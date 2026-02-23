@@ -1,6 +1,5 @@
 package com.hamid.usermanagement.service;
 
-
 import com.hamid.usermanagement.dto.request.CreateUserRequest;
 import com.hamid.usermanagement.dto.request.UpdateUserRequest;
 import com.hamid.usermanagement.dto.response.UserResponse;
@@ -11,9 +10,12 @@ import com.hamid.usermanagement.exception.UserNotFoundException;
 import com.hamid.usermanagement.mapper.UserMapper;
 import com.hamid.usermanagement.repository.UserRepository;
 import com.hamid.usermanagement.security.AuthenticationFacade;
+import com.hamid.usermanagement.util.UserResponseFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final AuthenticationFacade authenticationFacade;
-
     private final ApplicationEventPublisher eventPublisher;
+    private final UserResponseFilter responseFilter;  // ← NUOVO: Field filtering utility
 
     @Override
     @Transactional(readOnly = true)
@@ -38,10 +40,17 @@ public class UserServiceImpl implements UserService {
         log.info("User '{}' is retrieving all users", currentUser);
 
         log.info("Retrieving all users");
-        return userRepository.findAll()
+        List<UserResponse> responses = userRepository.findAll()
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return responseFilter.applyFiltering(responses, auth.getAuthorities());
+        }
+
+        return responses;
     }
 
     @Override
@@ -52,7 +61,15 @@ public class UserServiceImpl implements UserService {
         log.info("Retrieving user with id: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        return userMapper.toResponse(user);
+
+        UserResponse response = userMapper.toResponse(user);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return responseFilter.applyFiltering(response, auth.getAuthorities());
+        }
+
+        return response;
     }
 
     @Override
@@ -80,7 +97,15 @@ public class UserServiceImpl implements UserService {
         eventPublisher.publishEvent(new UserCreatedEvent(this, savedUser));
 
         log.info("User created successfully with id: {}", savedUser.getId());
-        return userMapper.toResponse(savedUser);
+
+        UserResponse response = userMapper.toResponse(savedUser);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return responseFilter.applyFiltering(response, auth.getAuthorities());
+        }
+
+        return response;
     }
 
     @Override
@@ -105,7 +130,14 @@ public class UserServiceImpl implements UserService {
         log.info("User '{}' successfully updated user with id: {}", currentUser, id);
         log.info("User updated successfully with id: {}", id);
 
-        return userMapper.toResponse(updatedUser);
+        UserResponse response = userMapper.toResponse(updatedUser);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return responseFilter.applyFiltering(response, auth.getAuthorities());
+        }
+
+        return response;
     }
 
     @Override
